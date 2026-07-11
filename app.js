@@ -858,9 +858,60 @@ async function emailBotScan() {
       )
     );
 
-    renderEmailBotList(detailsArr);
+    // -- Update Claims based on Emails --
+    let claims = db.getClaims();
+    let updatedClaims = false;
+    const plateRegex = /\\b\\d{2}-?\\d{3}-?\\d{2,3}\\b/g;
+
+    detailsArr.forEach(email => {
+      const headers = (email.payload && email.payload.headers) || [];
+      const subject = (headers.find(h => h.name === 'Subject') || {}).value || '(ללא נושא)';
+      const from    = (headers.find(h => h.name === 'From')    || {}).value || '—';
+      const date    = (headers.find(h => h.name === 'Date')    || {}).value || null;
+      const snippet = email.snippet || '';
+
+      const combined = subject + ' ' + snippet;
+      const plates   = (combined.match(plateRegex) || []);
+
+      if (plates.length > 0) {
+        const claimIdx = claims.findIndex(c => plates.some(p => (c.plateNumber||'').replace(/-/g,'') === p.replace(/-/g,'')));
+        if (claimIdx !== -1) {
+          const claim = claims[claimIdx];
+          if (!claim.emails) claim.emails = [];
+
+          // Save email to claim if not already saved
+          if (!claim.emails.some(e => e.id === email.id)) {
+            claim.emails.unshift({
+              id: email.id,
+              subject,
+              from: from.replace(/<[^>]+>/g,'').trim(),
+              snippet: snippet.substring(0, 150),
+              date: date ? new Date(date).toISOString() : nowISO()
+            });
+            updatedClaims = true;
+
+            // Auto-update status based on email content
+            const text = combined.toLowerCase();
+            if (text.includes('אישור') || text.includes('סגירה') || text.includes('הושלם') || text.includes('תשלום') || text.includes('approved')) {
+              claim.status = 'הושלם';
+            } else if (text.includes('שמאות') || text.includes('בדיקה') || text.includes('חסר') || text.includes('מסמכים') || text.includes('pending')) {
+              if (claim.status === 'חדש') claim.status = 'בטיפול';
+            }
+            claim.updatedAt = nowISO();
+          }
+        }
+      }
+    });
+
+    if (updatedClaims) {
+      db.saveClaims(claims);
+      loadDashboard();
+      if (document.querySelector('#page-claims.active')) filterClaims();
+    }
+
+    renderEmailBotList(detailsArr, claims);
     if (el('emailbot-dot')) el('emailbot-dot').className = 'dot green';
-    toast(`נמצאו ${messages.length} אימיילים`, 'success');
+    toast(`נמצאו ${messages.length} אימיילים וקושרו לתביעות`, 'success');
 
   } catch (e) {
     toast('שגיאה בסריקה: ' + e.message, 'error');
@@ -870,8 +921,8 @@ async function emailBotScan() {
   }
 }
 
-function renderEmailBotList(emails) {
-  const claims  = db.getClaims();
+function renderEmailBotList(emails, latestClaims) {
+  const claims  = latestClaims || db.getClaims();
   const listEl  = el('emailbot-list');
   if (!listEl) return;
 
