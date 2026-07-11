@@ -182,11 +182,8 @@ function initApp() {
   loadDashboard();
 
   // Restore bot states
-  const settings = db.getSettings();
   if (settings.optBotAuto) startOptBotAuto();
-  const settings_restore = db.getSettings();
-  if (settings_restore.optBotAuto) startOptBotAuto();
-  if (settings_restore.emailBotAuto) startEmailBotAuto();
+  if (settings.emailBotAuto) startEmailBotAuto();
 
   // Mobile button
   if (window.innerWidth <= 768) {
