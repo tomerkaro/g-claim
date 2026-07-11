@@ -1,0 +1,34 @@
+{
+  "name": "G-Claim — ניהול תביעות",
+  "short_name": "G-Claim",
+  "description": "אפליקציית PWA לניהול תביעות ביטוח רכב למוסכים מקצועיים",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#CC0000",
+  "lang": "he",
+  "dir": "rtl",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "assets/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "תביעה חדשה",
+      "url": "./index.html#new-claim",
+      "description": "פתח תביעה חדשה"
+    }
+  ]
+}

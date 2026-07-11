@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#CC0000">
+  <meta name="description" content="G-Claim — ניהול תביעות ביטוח רכב למוסכים מקצועיים">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>G-Claim | ניהול תביעות</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     🔐 LOGIN PAGE
+══════════════════════════════════════════════════ -->
+<div id="page-login">
+  <div class="login-card">
+    <div class="login-shield">🛡️</div>
+    <div class="login-brand">G-Claim</div>
+    <div class="login-tagline">
+      ניהול תביעות ביטוח רכב<br>
+      <span style="opacity:0.6">למוסכים מקצועיים · מאובטח עם Google</span>
+    </div>
+    <button class="btn-google" id="btn-login" onclick="signIn()">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      התחבר עם Google
+    </button>
+    <div id="login-error"></div>
+    <div class="login-footer">G-Claim v1.0 &nbsp;|&nbsp; Firebase Auth &nbsp;|&nbsp; PWA</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     🏠 MAIN APP
+══════════════════════════════════════════════════ -->
+<div id="app" style="display:none">
+
+  <!-- ── TOPBAR ──────────────────────────────────── -->
+  <div id="topbar">
+    <div class="topbar-brand">
+      <button id="btn-menu" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-logo">G</div>
+      <span class="topbar-title">G-Claim</span>
+    </div>
+
+    <div class="topbar-actions">
+      <!-- Optimization Bot Indicator -->
+      <div class="bot-pill" id="optbot-pill" onclick="goPage('optbot')" title="בוט אופטימיזציה">
+        <span>⚙</span>
+        <span>בוט</span>
+        <span class="dot" id="optbot-dot"></span>
+      </div>
+
+      <!-- Email Bot Indicator -->
+      <div class="bot-pill" id="emailbot-pill" onclick="goPage('emailbot')" title="Email Bot">
+        <span>✉</span>
+        <span>Email Bot</span>
+        <span class="dot" id="emailbot-dot"></span>
+      </div>
+
+      <!-- Quick Scan Button -->
+      <button class="btn-scan" id="btn-scan" onclick="quickScan()">
+        <span>▶</span>
+        <span>סרוק</span>
+      </button>
+
+      <!-- User Chip -->
+      <div class="user-chip" onclick="goPage('settings')" title="הגדרות">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <span class="user-name" id="user-name">טוען...</span>
+      </div>
+    </div>
+  </div><!-- /topbar -->
+
+  <!-- Sidebar Overlay (mobile) -->
+  <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-body">
+
+    <!-- ── SIDEBAR ──────────────────────────────── -->
+    <div id="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">ניהול</div>
+
+        <div class="nav-item active" id="nav-dashboard" onclick="goPage('dashboard',this)">
+          <span class="nav-icon">🏠</span>
+          <span>דשבורד</span>
+        </div>
+
+        <div class="nav-item" id="nav-new-claim" onclick="goPage('new-claim',this)">
+          <span class="nav-icon">➕</span>
+          <span>תביעה חדשה</span>
+        </div>
+
+        <div class="nav-item" id="nav-claims" onclick="goPage('claims',this)">
+          <span class="nav-icon">📋</span>
+          <span>כל התביעות</span>
+          <span class="nav-badge" id="nav-badge-count">0</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">בוטים</div>
+
+        <div class="nav-item" id="nav-optbot" onclick="goPage('optbot',this)">
+          <span class="nav-icon">⚙</span>
+          <span>בוט אופטימיזציה</span>
+        </div>
+
+        <div class="nav-item" id="nav-emailbot" onclick="goPage('emailbot',this)">
+          <span class="nav-icon">✉</span>
+          <span>Email Bot</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">כללי</div>
+
+        <div class="nav-item" id="nav-settings" onclick="goPage('settings',this)">
+          <span class="nav-icon">⚙️</span>
+          <span>הגדרות</span>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-version">G-Claim v1.0 &nbsp;•&nbsp; PWA</div>
+        <button class="btn-signout" onclick="signOut()">🚪 התנתק</button>
+      </div>
+    </div><!-- /sidebar -->
+
+    <!-- ── MAIN CONTENT ─────────────────────────── -->
+    <main id="main-content">
+
+      <!-- ════════════════════════════════════
+           📊 DASHBOARD
+      ════════════════════════════════════ -->
+      <div id="page-dashboard" class="page active">
+        <div class="page-header">
+          <div>
+            <h1 id="dashboard-greeting">דשבורד</h1>
+            <div class="page-subtitle" id="dashboard-date"></div>
+          </div>
+          <button class="btn btn-primary" onclick="goPage('new-claim')">
+            ➕ תביעה חדשה
+          </button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-card red" onclick="goPage('claims')" style="cursor:pointer">
+            <div class="stat-label">סה"כ תביעות</div>
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-sub">כל הזמנים</div>
+            <div class="stat-bg-icon">📋</div>
+          </div>
+          <div class="stat-card orange" onclick="setFilterAndGo('בטיפול')" style="cursor:pointer">
+            <div class="stat-label">בטיפול</div>
+            <div class="stat-value" id="stat-processing">0</div>
+            <div class="stat-sub">ממתינות לסגירה</div>
+            <div class="stat-bg-icon">⏳</div>
+          </div>
+          <div class="stat-card green" onclick="setFilterAndGo('הושלם')" style="cursor:pointer">
+            <div class="stat-label">הושלמו</div>
+            <div class="stat-value" id="stat-completed">0</div>
+            <div class="stat-sub">תביעות סגורות</div>
+            <div class="stat-bg-icon">✅</div>
+          </div>
+          <div class="stat-card blue" onclick="setFilterAndGo('חדש')" style="cursor:pointer">
+            <div class="stat-label">חדשות (שבוע)</div>
+            <div class="stat-value" id="stat-new-week">0</div>
+            <div class="stat-sub">7 ימים אחרונים</div>
+            <div class="stat-bg-icon">🆕</div>
+          </div>
+        </div>
+
+        <!-- Recent Claims -->
+        <div class="section-header">
+          <div class="section-title">🕐 תביעות אחרונות</div>
+          <button class="btn btn-ghost btn-sm" onclick="goPage('claims')">הצג הכל →</button>
+        </div>
+        <div id="dashboard-recent">
+          <!-- populated by JS -->
+        </div>
+
+        <!-- Urgent Claims -->
+        <div id="urgent-section" style="display:none">
+          <div class="divider"></div>
+          <div class="section-header">
+            <div class="section-title" style="color:var(--danger)">🔴 דחוף</div>
+          </div>
+          <div id="dashboard-urgent"></div>
+        </div>
+      </div><!-- /dashboard -->
+
+
+      <!-- ════════════════════════════════════
+           ➕ NEW CLAIM
+      ════════════════════════════════════ -->
+      <div id="page-new-claim" class="page">
+        <div class="page-header">
+          <div>
+            <h1>תביעה חדשה</h1>
+            <div class="page-subtitle">מילוי פרטי הרכב, הלקוח והנזק</div>
+          </div>
+          <button class="btn btn-ghost" onclick="goPage('dashboard')">← חזור</button>
+        </div>
+
+        <!-- 🚗 Vehicle -->
+        <div class="form-section">
+          <div class="form-section-title">🚗 פרטי הרכב</div>
+          <div class="form-group" style="max-width:420px;margin-bottom:1rem">
+            <label class="form-label">מספר לוחית רישוי *</label>
+            <div class="plate-group">
+              <input type="text" id="inp-plate" class="form-input"
+                placeholder="12-345-67" maxlength="10"
+                oninput="this.value=this.value.replace(/[^0-9\-]/g,'')"
+                onkeydown="if(event.key==='Enter')lookupVehicle()">
+              <button class="btn-lookup" id="btn-lookup" onclick="lookupVehicle()">
+                🔍 חפש רכב
+              </button>
+            </div>
+          </div>
+
+          <div id="vehicle-box" class="vehicle-box">
+            <div class="vehicle-box-title">✅ נמצא במרשם הרכב הלאומי</div>
+            <div class="vehicle-data-grid">
+              <div class="vehicle-data-item"><label>יצרן</label><span id="vi-maker">-</span></div>
+              <div class="vehicle-data-item"><label>דגם</label><span id="vi-model">-</span></div>
+              <div class="vehicle-data-item"><label>שנה</label><span id="vi-year">-</span></div>
+              <div class="vehicle-data-item"><label>צבע</label><span id="vi-color">-</span></div>
+              <div class="vehicle-data-item"><label>בעלות</label><span id="vi-owner">-</span></div>
+              <div class="vehicle-data-item"><label>סוג</label><span id="vi-type">-</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 👤 Owner -->
+        <div class="form-section">
+          <div class="form-section-title">👤 פרטי הלקוח</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">שם מלא *</label>
+              <input type="text" id="inp-owner-name" class="form-input" placeholder="ישראל ישראלי">
+            </div>
+            <div class="form-group">
+              <label class="form-label">טלפון</label>
+              <input type="tel" id="inp-owner-phone" class="form-input" placeholder="050-0000000" dir="ltr">
+            </div>
+            <div class="form-group">
+              <label class="form-label">אימייל</label>
+              <input type="email" id="inp-owner-email" class="form-input" placeholder="example@mail.com" dir="ltr">
+            </div>
+            <div class="form-group">
+              <label class="form-label">ת.ז / ח.פ</label>
+              <input type="text" id="inp-owner-id" class="form-input" placeholder="000000000" dir="ltr">
+            </div>
+          </div>
+        </div>
+
+        <!-- 🏛️ Insurance -->
+        <div class="form-section">
+          <div class="form-section-title">🏛️ פרטי ביטוח</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">חברת ביטוח</label>
+              <select id="inp-insurance" class="form-select">
+                <option value="">בחר חברה...</option>
+                <option>מגדל</option><option>הפניקס</option>
+                <option>כלל</option><option>הראל</option>
+                <option>מנורה</option><option>איילון</option>
+                <option>ביטוח ישיר</option><option>שלמה</option>
+                <option>AXA</option><option>הכשרה</option>
+                <option>אחר</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">מספר תביעה (ביטוח)</label>
+              <input type="text" id="inp-claim-num" class="form-input" placeholder="MAG-12345" dir="ltr">
+            </div>
+            <div class="form-group">
+              <label class="form-label">מספר פוליסה</label>
+              <input type="text" id="inp-policy-num" class="form-input" placeholder="123456789" dir="ltr">
+            </div>
+            <div class="form-group">
+              <label class="form-label">שמאי</label>
+              <input type="text" id="inp-appraiser" class="form-input" placeholder="שם השמאי">
+            </div>
+          </div>
+        </div>
+
+        <!-- 🔧 Damage -->
+        <div class="form-section">
+          <div class="form-section-title">🔧 פרטי הנזק</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">סוג הנזק</label>
+              <select id="inp-damage-type" class="form-select">
+                <option value="">בחר סוג...</option>
+                <option>פגיעה קדמית</option><option>פגיעה אחורית</option>
+                <option>פגיעה צד ימין</option><option>פגיעה צד שמאל</option>
+                <option>נזק גג</option><option>שמשה קדמית</option>
+                <option>שמשה אחורית</option><option>פגיעה מרובת אזורים</option>
+                <option>נזק חשמלי / מנוע</option><option>אחר</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">סטטוס</label>
+              <select id="inp-status" class="form-select">
+                <option value="חדש">🔵 חדש</option>
+                <option value="בטיפול">🟡 בטיפול</option>
+                <option value="הושלם">🟢 הושלם</option>
+                <option value="בוטל">⚫ בוטל</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">עלות משוערת (₪)</label>
+              <input type="number" id="inp-cost" class="form-input" placeholder="0" min="0" dir="ltr">
+            </div>
+            <div class="form-group">
+              <label class="form-label">עדיפות</label>
+              <select id="inp-priority" class="form-select">
+                <option value="רגיל">🟡 רגיל</option>
+                <option value="דחוף">🔴 דחוף</option>
+                <option value="נמוך">⚪ נמוך</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label class="form-label">תיאור הנזק</label>
+              <textarea id="inp-damage-desc" class="form-input"
+                placeholder="תיאור מפורט של הנזק — אזורים שנפגעו, חומרת הנזק..."></textarea>
+            </div>
+            <div class="form-group full">
+              <label class="form-label">הערות פנימיות למוסך</label>
+              <textarea id="inp-garage-notes" class="form-input"
+                placeholder="הערות שרק המוסך רואה..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:0.75rem;justify-content:flex-end;padding-bottom:2rem">
+          <button class="btn btn-secondary" onclick="clearNewClaimForm()">🔄 נקה טופס</button>
+          <button class="btn btn-primary btn-lg" onclick="saveClaim()">
+            💾 שמור תביעה
+          </button>
+        </div>
+      </div><!-- /new-claim -->
+
+
+      <!-- ════════════════════════════════════
+           📋 ALL CLAIMS
+      ════════════════════════════════════ -->
+      <div id="page-claims" class="page">
+        <div class="page-header">
+          <div>
+            <h1>כל התביעות</h1>
+            <div class="page-subtitle" id="claims-count-text">טוען...</div>
+          </div>
+          <button class="btn btn-primary" onclick="goPage('new-claim')">➕ תביעה חדשה</button>
+        </div>
+
+        <div class="search-row">
+          <input type="text" class="search-box" id="search-claims"
+            placeholder="🔍  חיפוש לפי לוחית, שם, מס׳ תביעה..."
+            oninput="filterClaims()">
+        </div>
+
+        <div class="filters-row">
+          <button class="filter-chip active" onclick="setFilter('הכל',this)">הכל</button>
+          <button class="filter-chip" onclick="setFilter('חדש',this)">🔵 חדש</button>
+          <button class="filter-chip" onclick="setFilter('בטיפול',this)">🟡 בטיפול</button>
+          <button class="filter-chip" onclick="setFilter('הושלם',this)">🟢 הושלם</button>
+          <button class="filter-chip" onclick="setFilter('בוטל',this)">⚫ בוטל</button>
+          <button class="filter-chip" onclick="setFilter('דחוף',this)">🔴 דחוף</button>
+        </div>
+
+        <div id="claims-list" class="claims-grid">
+          <!-- populated by JS -->
+        </div>
+      </div><!-- /claims -->
+
+
+      <!-- ════════════════════════════════════
+           🗂 CLAIM DETAIL
+      ════════════════════════════════════ -->
+      <div id="page-claim-detail" class="page">
+        <div class="page-header">
+          <div>
+            <h1>פרטי תביעה</h1>
+            <div class="page-subtitle" id="detail-id-sub">#—</div>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:center">
+            <button class="btn btn-secondary btn-sm" onclick="goBackToClaims()">← חזור</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteClaim()">🗑 מחק</button>
+          </div>
+        </div>
+
+        <!-- Hero card -->
+        <div class="detail-hero">
+          <div class="detail-top">
+            <div style="display:flex;align-items:center;gap:1.25rem">
+              <div class="detail-plate-hero" id="detail-plate">—</div>
+              <div>
+                <div class="detail-owner-hero" id="detail-owner">—</div>
+                <div class="detail-vehicle-hero" id="detail-vehicle">—</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem">
+              <span id="detail-status-badge" class="badge badge-new">—</span>
+              <select class="form-select" id="detail-status-select"
+                onchange="updateClaimStatus()"
+                style="font-size:0.8rem;padding:0.3rem 0.625rem;width:auto">
+                <option value="חדש">🔵 חדש</option>
+                <option value="בטיפול">🟡 בטיפול</option>
+                <option value="הושלם">🟢 הושלם</option>
+                <option value="בוטל">⚫ בוטל</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="detail-grid" id="detail-fields">
+            <div class="detail-field"><label>טלפון</label><span id="detail-phone">—</span></div>
+            <div class="detail-field"><label>אימייל</label><span id="detail-email">—</span></div>
+            <div class="detail-field"><label>ת.ז / ח.פ</label><span id="detail-id-num">—</span></div>
+            <div class="detail-field"><label>חברת ביטוח</label><span id="detail-insurance">—</span></div>
+            <div class="detail-field"><label>מס׳ תביעה</label><span id="detail-claim-num">—</span></div>
+            <div class="detail-field"><label>מס׳ פוליסה</label><span id="detail-policy">—</span></div>
+            <div class="detail-field"><label>סוג נזק</label><span id="detail-damage">—</span></div>
+            <div class="detail-field"><label>עלות משוערת</label><span id="detail-cost">—</span></div>
+            <div class="detail-field"><label>עדיפות</label><span id="detail-priority">—</span></div>
+            <div class="detail-field"><label>שמאי</label><span id="detail-appraiser">—</span></div>
+            <div class="detail-field"><label>תאריך פתיחה</label><span id="detail-created">—</span></div>
+            <div class="detail-field"><label>עדכון אחרון</label><span id="detail-updated">—</span></div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab('desc',this)">📝 תיאור</div>
+          <div class="tab" onclick="switchTab('notes',this)">💬 הערות</div>
+          <div class="tab" onclick="switchTab('emails',this)">✉ אימיילים</div>
+        </div>
+
+        <div id="tab-desc" class="tab-content active">
+          <div class="form-group">
+            <label class="form-label">תיאור הנזק</label>
+            <div id="detail-desc-text"
+              style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;color:var(--text);font-size:0.9rem;line-height:1.6;min-height:80px">
+              —
+            </div>
+          </div>
+          <div style="margin-top:1rem">
+            <label class="form-label">הערות פנימיות</label>
+            <div id="detail-garage-notes"
+              style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;color:var(--text-muted);font-size:0.875rem;line-height:1.6;min-height:60px">
+              —
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-notes" class="tab-content">
+          <div id="detail-notes-list" style="margin-bottom:1rem"></div>
+          <div class="note-add">
+            <textarea id="inp-new-note" class="form-input"
+              placeholder="הוסף הערה לתביעה..." rows="2"></textarea>
+            <button class="btn btn-primary" onclick="addNote()">הוסף</button>
+          </div>
+        </div>
+
+        <div id="tab-emails" class="tab-content">
+          <div id="detail-emails-list"></div>
+        </div>
+      </div><!-- /claim-detail -->
+
+
+      <!-- ════════════════════════════════════
+           ⚙ OPTIMIZATION BOT
+      ════════════════════════════════════ -->
+      <div id="page-optbot" class="page">
+        <div class="bot-page-header">
+          <div class="bot-avatar">⚙</div>
+          <div>
+            <h1>בוט אופטימיזציה</h1>
+            <div class="page-subtitle">בדיקה ותיקון אוטומטי של נתוני התביעות</div>
+          </div>
+        </div>
+
+        <div class="bot-card">
+          <div class="bot-status-row">
+            <div class="bot-status-left">
+              <span class="dot" id="optbot-status-dot"></span>
+              <span id="optbot-status-text" style="font-size:0.875rem;color:var(--text-muted)">
+                לא פעיל
+              </span>
+            </div>
+            <span id="optbot-last-run" style="font-size:0.78rem;color:var(--text-dim)">
+              לא רץ עדיין
+            </span>
+          </div>
+
+          <div class="bot-controls-row">
+            <button class="btn btn-primary" onclick="optBotRunNow()">▶ הרץ עכשיו</button>
+            <div class="toggle-wrap" onclick="toggleOptBot()">
+              <div class="toggle-switch" id="optbot-toggle"></div>
+              <span class="toggle-label">ריצה אוטומטית כל 5 דקות</span>
+            </div>
+          </div>
+
+          <!-- Mini stats -->
+          <div class="stats-grid" style="margin-bottom:0">
+            <div class="stat-card blue">
+              <div class="stat-label">בדיקות</div>
+              <div class="stat-value" id="optbot-checks">0</div>
+            </div>
+            <div class="stat-card orange">
+              <div class="stat-label">בעיות נמצאו</div>
+              <div class="stat-value" id="optbot-issues">0</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-label">תיקונים</div>
+              <div class="stat-value" id="optbot-fixes">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <div class="section-title">📟 לוג פעולות</div>
+          <button class="btn btn-ghost btn-sm" onclick="clearOptLog()">נקה</button>
+        </div>
+        <div class="bot-log" id="optbot-log">
+          <div class="log-entry">
+            <span class="log-time">--:--:--</span>
+            <span class="log-msg">בוט אופטימיזציה מוכן לריצה...</span>
+          </div>
+        </div>
+      </div><!-- /optbot -->
+
+
+      <!-- ════════════════════════════════════
+           ✉ EMAIL BOT
+      ════════════════════════════════════ -->
+      <div id="page-emailbot" class="page">
+        <div class="bot-page-header">
+          <div class="bot-avatar">✉</div>
+          <div>
+            <h1>Email Bot</h1>
+            <div class="page-subtitle">סריקת Gmail וקישור אוטומטי לתביעות</div>
+          </div>
+        </div>
+
+        <div class="bot-card">
+          <div class="bot-status-row">
+            <div class="bot-status-left">
+              <span class="dot" id="emailbot-status-dot"></span>
+              <span id="emailbot-status-text" style="font-size:0.875rem;color:var(--text-muted)">
+                לא מחובר ל-Gmail
+              </span>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="connectGmail()">
+              🔗 חבר Gmail
+            </button>
+          </div>
+
+          <div class="bot-controls-row">
+            <button class="btn btn-primary" id="btn-email-scan" onclick="emailBotScan()">
+              📧 סרוק אימיילים
+            </button>
+            <div class="toggle-wrap" onclick="toggleEmailBot()">
+              <div class="toggle-switch" id="emailbot-toggle"></div>
+              <span class="toggle-label">סריקה אוטומטית כל שעה</span>
+            </div>
+          </div>
+
+          <div class="query-box">
+            <strong>Gmail Query:</strong>
+            <span style="color:#60a5fa;direction:ltr;display:inline-block">
+              רכב OR תביעה OR ביטוח OR מוסך
+            </span>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <div class="section-title">📬 אימיילים שנמצאו</div>
+          <span style="font-size:0.78rem;color:var(--text-dim)" id="emailbot-count">0 אימיילים</span>
+        </div>
+
+        <div id="emailbot-list">
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div class="empty-title">לא נסרקו אימיילים עדיין</div>
+            <div class="empty-sub">לחץ "סרוק אימיילים" להתחיל</div>
+          </div>
+        </div>
+      </div><!-- /emailbot -->
+
+
+      <!-- ════════════════════════════════════
+           ⚙️ SETTINGS
+      ════════════════════════════════════ -->
+      <div id="page-settings" class="page">
+        <div class="page-header">
+          <div>
+            <h1>הגדרות</h1>
+            <div class="page-subtitle">חשבון, אפליקציה וניהול נתונים</div>
+          </div>
+        </div>
+
+        <!-- Account -->
+        <div class="settings-card">
+          <h3>👤 פרטי חשבון</h3>
+          <div class="settings-row">
+            <span class="settings-key">שם</span>
+            <span class="settings-val" id="settings-name">—</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-key">אימייל</span>
+            <span class="settings-val" id="settings-email">—</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-key">שיטת אימות</span>
+            <span class="settings-val" style="color:var(--success)">✅ Google Workspace</span>
+          </div>
+        </div>
+
+        <!-- App -->
+        <div class="settings-card">
+          <h3>📱 אפליקציה</h3>
+          <div class="settings-row">
+            <span class="settings-key">גרסה</span>
+            <span class="settings-val">1.0.0</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-key">מסד נתונים</span>
+            <span class="settings-val">localStorage</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-key">PWA מותקן</span>
+            <span class="settings-val" id="settings-pwa">בדיקה...</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-key">Service Worker</span>
+            <span class="settings-val" id="settings-sw">בדיקה...</span>
+          </div>
+        </div>
+
+        <!-- Firebase -->
+        <div class="settings-card">
+          <h3>🔥 Firebase</h3>
+          <div class="settings-row">
+            <span class="settings-key">Project</span>
+            <span class="settings-val">g-claim</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-key">Auth Domain</span>
+            <span class="settings-val">g-claim.firebaseapp.com</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-key">Gmail API Token</span>
+            <span class="settings-val" id="settings-gmail">❌ לא מחובר</span>
+          </div>
+        </div>
+
+        <!-- Data -->
+        <div class="settings-card">
+          <h3>💾 ניהול נתונים</h3>
+          <div class="settings-row">
+            <span class="settings-key">תביעות שמורות</span>
+            <span class="settings-val" id="settings-claims-count">0</span>
+          </div>
+          <div class="settings-actions">
+            <button class="btn btn-secondary btn-sm" onclick="exportData()">📤 יצוא JSON</button>
+            <button class="btn btn-secondary btn-sm" onclick="importData()">📥 יבוא JSON</button>
+            <button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑 מחק הכל</button>
+          </div>
+        </div>
+
+        <div style="padding-bottom:2rem">
+          <button class="btn btn-danger" onclick="signOut()">🚪 התנתק מהחשבון</button>
+        </div>
+      </div><!-- /settings -->
+
+    </main><!-- /main-content -->
+  </div><!-- /app-body -->
+</div><!-- /app -->
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<!-- App Logic -->
+<script src="app.js"></script>
+</body>
+</html>
