@@ -148,6 +148,20 @@ function initApp() {
   // Dashboard greeting
   const hour = new Date().getHours();
   const greet = hour < 5 ? 'לילה טוב' : hour < 12 ? 'בוקר טוב' : hour < 17 ? 'צהריים טובים' : hour < 21 ? 'ערב טוב' : 'לילה טוב';
+
+  if (!sessionStorage.getItem('welcomed')) {
+    toast(`ברוך הבא, ${name}! 👋`, 'success', 4000);
+    sessionStorage.setItem('welcomed', 'true');
+  }
+
+  // Load custom settings (theme)
+  const settings = db.getSettings();
+  if (settings.themeColor) {
+    document.documentElement.style.setProperty('--primary', settings.themeColor);
+    document.documentElement.style.setProperty('--primary-dark', shadeColor(settings.themeColor, -20));
+    const cp = el('settings-color');
+    if (cp) cp.value = settings.themeColor;
+  }
   el('dashboard-greeting').textContent = `${greet}, ${name.split(' ')[0]}! 👋`;
 
   const today = new Date().toLocaleDateString('he-IL', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
@@ -170,7 +184,9 @@ function initApp() {
   // Restore bot states
   const settings = db.getSettings();
   if (settings.optBotAuto) startOptBotAuto();
-  if (settings.emailBotAuto) startEmailBotAuto();
+  const settings_restore = db.getSettings();
+  if (settings_restore.optBotAuto) startOptBotAuto();
+  if (settings_restore.emailBotAuto) startEmailBotAuto();
 
   // Mobile button
   if (window.innerWidth <= 768) {
@@ -179,6 +195,8 @@ function initApp() {
   window.addEventListener('resize', () => {
     el('btn-menu').style.display = window.innerWidth <= 768 ? 'flex' : 'none';
   });
+  window.addEventListener('online',  () => toast('חיבור אינטרנט חזר 🌐', 'success'));
+  window.addEventListener('offline', () => toast('אין חיבור אינטרנט ❌', 'error'));
 
   // Service worker
   if ('serviceWorker' in navigator) {
