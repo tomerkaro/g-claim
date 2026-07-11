@@ -1,5 +1,5 @@
-// G-Claim Service Worker v1.1
-const CACHE_NAME = 'gclaim-v1.1';
+// G-Claim Service Worker v1.2
+const CACHE_NAME = 'gclaim-v1.2';
 const ASSETS = [
   './',
   './index.html',

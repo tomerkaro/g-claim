@@ -180,6 +180,9 @@ function initApp() {
 
   // Load data
   loadDashboard();
+  
+  // Timer
+  startReminderTimer();
 
   // Restore bot states
   if (settings.optBotAuto) startOptBotAuto();
@@ -1105,3 +1108,38 @@ document.addEventListener('keydown', e => {
   // Esc → close sidebar on mobile
   if (e.key === 'Escape') closeSidebar();
 });
+
+// ── Timer Logic ──────────────────────────────────────────────────
+let reminderTimer = 300; // 5 minutes in seconds
+let reminderInterval = null;
+
+function startReminderTimer() {
+  if (reminderInterval) clearInterval(reminderInterval);
+  updateTimerUI();
+  reminderInterval = setInterval(() => {
+    reminderTimer--;
+    if (reminderTimer <= 0) {
+      reminderTimer = 0;
+      clearInterval(reminderInterval);
+      toast('🔔 תזכורת! הגיע הזמן לבדוק נתונים', 'warning', 6000);
+      const navTimer = el('nav-timer');
+      if (navTimer) navTimer.classList.add('timer-alert');
+    }
+    updateTimerUI();
+  }, 1000);
+}
+
+function resetTimer() {
+  reminderTimer = 300;
+  const navTimer = el('nav-timer');
+  if (navTimer) navTimer.classList.remove('timer-alert');
+  startReminderTimer();
+  toast('טיימר אופס בהצלחה ל-5 דקות', 'success');
+}
+
+function updateTimerUI() {
+  const m = Math.floor(reminderTimer / 60).toString().padStart(2, '0');
+  const s = (reminderTimer % 60).toString().padStart(2, '0');
+  const txt = el('timer-text');
+  if (txt) txt.textContent = `תזכורת: ${m}:${s}`;
+}
